@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcolatore ECV Medico</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-blue-900">Calcolatore ECV</h1>
+            <p class="text-gray-600 mt-2">Volume Extracellulare (CMR & CT)</p>
+        </header>
+
+        <div class="flex justify-center mb-6">
+            <div class="bg-white p-1 rounded-full shadow-inner border">
+                <button id="tabCMR" onclick="switchTab('CMR')" class="px-6 py-2 rounded-full text-sm font-semibold transition-all bg-blue-600 text-white">Risonanza (CMR)</button>
+                <button id="tabCT" onclick="switchTab('CT')" class="px-6 py-2 rounded-full text-sm font-semibold transition-all text-gray-700 hover:bg-gray-100">TAC (CT)</button>
+            </div>
+        </div>
+
+        <div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-lg border">
+            
+            <div id="formCMR" class="space-y-4">
+                <h2 class="text-2xl font-semibold mb-4 text-gray-800">Parametri CMR</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Ematocrito (0.0 - 1.0)</label>
+                        <input type="number" id="hctCMR" step="0.01" placeholder="es. 0.45" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">T1 Myo Pre</label>
+                        <input type="number" id="t1MyoPre" placeholder="ms" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">T1 Myo Post</label>
+                        <input type="number" id="t1MyoPost" placeholder="ms" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">T1 Blood Pre</label>
+                        <input type="number" id="t1BloodPre" placeholder="ms" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">T1 Blood Post</label>
+                        <input type="number" id="t1BloodPost" placeholder="ms" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                    </div>
+                </div>
+                <button onclick="calculate('CMR')" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">Calcola ECV CMR</button>
+            </div>
+
+            <div id="formCT" class="space-y-4 hidden">
+                <h2 class="text-2xl font-semibold mb-4 text-gray-800">Parametri TAC</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Ematocrito (0.0 - 1.0)</label>
+                        <input type="number" id="hctCT" step="0.01" placeholder="es. 0.45" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">HU Myo Pre</label>
+                        <input type="number" id="huMyoPre" placeholder="HU" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">HU Myo Post</label>
+                        <input type="number" id="huMyoPost" placeholder="HU" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">HU Blood Pre</label>
+                        <input type="number" id="huBloodPre" placeholder="HU" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">HU Blood Post</label>
+                        <input type="number" id="huBloodPost" placeholder="HU" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                    </div>
+                </div>
+                <button onclick="calculate('CT')" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">Calcola ECV CT</button>
+            </div>
+
+            <div id="resultArea" class="mt-8 p-6 bg-blue-50 rounded-lg text-center hidden">
+                <p class="text-sm text-blue-800 font-semibold uppercase tracking-wide">Volume Extracellulare (ECV)</p>
+                <p id="resultValue" class="text-5xl font-bold text-blue-950 mt-2">--</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'CMR';
+
+        function switchTab(mode) {
+            currentMode = mode;
+            const tabCMR = document.getElementById('tabCMR');
+            const tabCT = document.getElementById('tabCT');
+            const formCMR = document.getElementById('formCMR');
+            const formCT = document.getElementById('formCT');
+            document.getElementById('resultArea').classList.add('hidden');
+
+            if (mode === 'CMR') {
+                tabCMR.classList.add('bg-blue-600', 'text-white');
+                tabCMR.classList.remove('text-gray-700');
+                tabCT.classList.remove('bg-blue-600', 'text-white');
+                tabCT.classList.add('text-gray-700');
+                formCMR.classList.remove('hidden');
+                formCT.classList.add('hidden');
+            } else {
+                tabCT.classList.add('bg-blue-600', 'text-white');
+                tabCT.classList.remove('text-gray-700');
+                tabCMR.classList.remove('bg-blue-600', 'text-white');
+                tabCMR.classList.add('text-gray-700');
+                formCT.classList.remove('hidden');
+                formCMR.classList.add('hidden');
+            }
+        }
+
+        function calculate(type) {
+            let ecv = 0;
+            let hct = 0;
+
+            try {
+                if (type === 'CMR') {
+                    hct = parseFloat(document.getElementById('hctCMR').value);
+                    const t1mp = parseFloat(document.getElementById('t1MyoPre').value);
+                    const t1mpo = parseFloat(document.getElementById('t1MyoPost').value);
+                    const t1bp = parseFloat(document.getElementById('t1BloodPre').value);
+                    const t1bpo = parseFloat(document.getElementById('t1BloodPost').value);
+
+                    if ([hct, t1mp, t1mpo, t1bp, t1bpo].some(isNaN)) throw "Inserisci tutti i valori";
+
+                    const deltaR1Myo = (1 / t1mpo) - (1 / t1mp);
+                    const deltaR1Blood = (1 / t1bpo) - (1 / t1bp);
+                    ecv = (1 - hct) * (deltaR1Myo / deltaR1Blood);
+                } else {
+                    hct = parseFloat(document.getElementById('hctCT').value);
+                    const huMp = parseFloat(document.getElementById('huMyoPre').value);
+                    const huMpo = parseFloat(document.getElementById('huMyoPost').value);
+                    const huBp = parseFloat(document.getElementById('huBloodPre').value);
+                    const huBpo = parseFloat(document.getElementById('huBloodPost').value);
+
+                    if ([hct, huMp, huMpo, huBp, huBpo].some(isNaN)) throw "Inserisci tutti i valori";
+
+                    const deltaHuMyo = huMpo - huMp;
+                    const deltaHuBlood = huBpo - huBp;
+                    ecv = (1 - hct) * (deltaHuMyo / deltaHuBlood);
+                }
+
+                displayResult(ecv);
+            } catch (error) {
+                alert(error);
+            }
+        }
+
+        function displayResult(value) {
+            const resultArea = document.getElementById('resultArea');
+            const resultValue = document.getElementById('resultValue');
+            resultValue.innerText = (value * 100).toFixed(1) + '%';
+            resultArea.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
